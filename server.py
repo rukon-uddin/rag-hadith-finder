@@ -19,8 +19,9 @@ from utils import MyUtils
 
 EMBEDDING_MODEL_PATH = "../embed_model/bge-m3-FP16.gguf"
 VECTOR_DB_DIR        = "../rag_vector_db"
-TOP_K                = 3    # hadiths per book fed to the LLM prompt
-TOP_K_UI             = 2    # hadiths per book shown in the UI
+HADITH_BOOK_SQUENCE = ['Top 3',"bukhari","muslim","abudawud","tirmidhi","nasai","ibnmajah","malik","nawawi"]
+TOP_K                = 5    # hadiths per book fed to the LLM prompt
+TOP_K_UI             = 1    # hadiths per book shown in the UI
 
 
 N_EMBED_WORKERS = 2
@@ -84,18 +85,15 @@ class AskResponse(BaseModel):
 # ── Blocking worker (runs in thread pool) ───────────────────────────────────────
 
 def _embed_and_search(query: str) -> dict[str, list[str]]:
-    """
-    1. Borrow a Llama instance from the pool.
-    2. Embed the query — serialised via _gpu_sem so only 1 thread uses GPU at once.
-    3. Cosine-search all books in RAM — pure CPU, runs concurrently across threads.
-    4. Return pool item and results.
-    """
-    model = _model_pool.get()   # waits only if all worker slots are busy
+    model = _model_pool.get()
     try:
         with _gpu_sem:
             query_vec = model.embed(query)
 
         results: dict[str, list[str]] = {}
+        final_results: dict[str, list[str]] = {}
+        all_sims: list[tuple[str, float]] = []
+        
         for book_name, vectors in VECTOR_DBS.items():
             sims = [
                 (text, util.cosine_similarity(query_vec, emb))
@@ -103,10 +101,17 @@ def _embed_and_search(query: str) -> dict[str, list[str]]:
             ]
             sims.sort(key=lambda x: x[1], reverse=True)
             results[book_name] = [t for t, _ in sims[:TOP_K]]
+            all_sims.extend(sims)  # collect for global top 3
 
-        return results
+        all_sims.sort(key=lambda x: x[1], reverse=True)
+        results["Top 3"] = [t for t, _ in all_sims[:4]]
+
+        for i in HADITH_BOOK_SQUENCE:
+            final_results[i] = results[i]
+
+        return final_results
     finally:
-        _model_pool.put(model)  # always return — even on exception
+        _model_pool.put(model)
 
 
 def _call_llm(prompt: str) -> str:
@@ -128,7 +133,7 @@ Question:
 
 Instructions:
 1. The response must be entirely in Bangla.
-2. Write the hadith as it is in the dictionary witout the source.
+2. Write the hadith as it is in the dictionary witout the source, Dont repeat hadith.
 3. Do not include any explanation, introduction, or additional text.
 4. Do not use any special characters (such as **, ``, --- etc.).
 5. Follow the format below:
@@ -156,11 +161,17 @@ async def ask(req: AskRequest):
     # Step 2 — LLM call (blocking network call → thread pool)
     # All 20 users' LLM calls run concurrently here because OpenAI/Groq
     # is an external service — no GPU contention on your machine.
-    prompt = build_prompt(query, similar)
-    answer = await loop.run_in_executor(_executor, _call_llm, prompt)
+    # prompt = build_prompt(query, similar)
+    # answer = await loop.run_in_executor(_executor, _call_llm, prompt)
 
-    top2 = {book: texts[:TOP_K_UI] for book, texts in similar.items()}
-    return AskResponse(answer=answer, books=top2)
+    # top2 = {book: texts[:TOP_K_UI] for book, texts in similar.items()}
+    top2 = {}
+    for book, texts in similar.items():
+        top2[book] = texts[:TOP_K_UI]
+        if book == 'Top 3':
+            top2[book] = texts[:4]
+
+    return AskResponse(answer='', books=top2)
 
 
 @app.get("/health")

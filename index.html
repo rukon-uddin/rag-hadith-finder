@@ -705,7 +705,7 @@
     if (!bookNames.length) return;
 
     bookNames.forEach((bookKey, bi) => {
-      const hadiths = books[bookKey].slice(0, 2);
+      const hadiths = books[bookKey].slice(0, 4);
       if (!hadiths.length) return;
 
       const info = BOOK_MAP[bookKey] || { bangla: bookKey, arabic: "📖", en: bookKey };
