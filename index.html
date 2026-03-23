@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="bn" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>হাদিস অনুসন্ধান</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Noto+Serif+Bengali:wght@300;400;500;600&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1208;
+    --parchment: #f5efe0;
+    --parchment-dark: #ede4cc;
+    --parchment-mid: #f0e8d0;
+    --gold: #b8860b;
+    --gold-light: #d4a017;
+    --gold-pale: #f0d080;
+    --teal: #2d6a5a;
+    --teal-light: #3d8a72;
+    --teal-pale: #e0f0eb;
+    --rust: #8b3a1a;
+    --shadow: rgba(26, 18, 8, 0.15);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background-color: var(--parchment);
+    background-image:
+      radial-gradient(ellipse at 20% 20%, rgba(184,134,11,0.06) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 80%, rgba(45,106,90,0.06) 0%, transparent 60%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Ccircle cx='30' cy='30' r='1' fill='%23b8860b' opacity='0.06'/%3E%3C/svg%3E");
+    min-height: 100vh;
+    font-family: 'Noto Serif Bengali', serif;
+    color: var(--ink);
+  }
+
+  /* — Ornamental border frame — */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 12px;
+    border: 1.5px solid var(--gold);
+    opacity: 0.3;
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* ===== Header ===== */
+  header {
+    text-align: center;
+    padding: 52px 24px 36px;
+    position: relative;
+  }
+
+  .arabesque {
+    font-family: 'Amiri', serif;
+    font-size: 2.6rem;
+    color: var(--teal);
+    letter-spacing: 0.08em;
+    line-height: 1;
+    margin-bottom: 6px;
+    animation: fadeDown 0.8s ease both;
+  }
+
+  header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--gold);
+    letter-spacing: 0.04em;
+    animation: fadeDown 0.9s ease both;
+  }
+
+  .subtitle {
+    font-family: 'Noto Serif Bengali', serif;
+    font-size: 0.95rem;
+    color: var(--teal);
+    margin-top: 6px;
+    opacity: 0.8;
+    animation: fadeDown 1s ease both;
+  }
+
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    max-width: 480px;
+    margin: 20px auto 0;
+    animation: fadeDown 1.1s ease both;
+  }
+  .divider-line { flex: 1; height: 1px; background: linear-gradient(to right, transparent, var(--gold), transparent); }
+  .divider-gem { width: 8px; height: 8px; background: var(--gold); transform: rotate(45deg); flex-shrink: 0; }
+
+  /* ===== Main layout ===== */
+  main {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 0 24px 80px;
+  }
+
+  /* ===== Search card ===== */
+  .search-card {
+    background: linear-gradient(135deg, rgba(255,255,255,0.7) 0%, rgba(240,232,208,0.6) 100%);
+    border: 1px solid rgba(184,134,11,0.3);
+    border-radius: 3px;
+    padding: 32px;
+    box-shadow: 0 4px 24px var(--shadow), inset 0 1px 0 rgba(255,255,255,0.8);
+    position: relative;
+    animation: fadeUp 0.8s ease both;
+  }
+
+  .search-card::before, .search-card::after {
+    content: '✦';
+    position: absolute;
+    color: var(--gold);
+    font-size: 0.7rem;
+    opacity: 0.5;
+  }
+  .search-card::before { top: 10px; left: 12px; }
+  .search-card::after  { bottom: 10px; right: 12px; }
+
+  .search-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--teal);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    display: block;
+  }
+
+  .input-row {
+    display: flex;
+    gap: 10px;
+    align-items: stretch;
+  }
+
+  textarea {
+    flex: 1;
+    background: rgba(255,255,255,0.85);
+    border: 1.5px solid rgba(184,134,11,0.4);
+    border-radius: 2px;
+    padding: 14px 16px;
+    font-family: 'Noto Serif Bengali', serif;
+    font-size: 1rem;
+    color: var(--ink);
+    resize: none;
+    min-height: 80px;
+    line-height: 1.6;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+  }
+
+  textarea:focus {
+    border-color: var(--teal);
+    box-shadow: 0 0 0 3px rgba(45,106,90,0.12);
+  }
+  textarea::placeholder { color: #a09070; }
+
+  .ask-btn {
+    background: linear-gradient(160deg, var(--teal-light), var(--teal));
+    color: #fff;
+    border: none;
+    border-radius: 2px;
+    padding: 0 22px;
+    font-family: 'Noto Serif Bengali', serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  .ask-btn::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, rgba(255,255,255,0.15), transparent);
+    pointer-events: none;
+  }
+
+  .ask-btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(45,106,90,0.35);
+  }
+  .ask-btn:active:not(:disabled) { transform: translateY(0); }
+  .ask-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+  .ask-btn .btn-icon { display: block; font-size: 1.3rem; margin-bottom: 2px; }
+  .ask-btn .btn-text { display: block; font-size: 0.78rem; }
+
+  /* ===== Loading state ===== */
+  .loader {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    padding: 36px 24px;
+    animation: fadeIn 0.3s ease;
+  }
+  .loader.active { display: flex; }
+
+  .loader-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1rem;
+    color: var(--gold);
+    letter-spacing: 0.1em;
+  }
+
+  .books-progress {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    width: 100%;
+    max-width: 620px;
+  }
+
+  .book-pill {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    padding: 10px 8px;
+    border-radius: 4px;
+    border: 1px solid rgba(184,134,11,0.2);
+    background: rgba(255,255,255,0.5);
+    transition: all 0.35s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .book-pill::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(45,106,90,0.08), rgba(184,134,11,0.08));
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .book-pill.searching {
+    border-color: var(--gold);
+    background: rgba(255,255,255,0.85);
+    box-shadow: 0 0 14px rgba(184,134,11,0.22);
+    transform: translateY(-2px);
+  }
+  .book-pill.searching::before { opacity: 1; }
+
+  .book-pill.done {
+    border-color: var(--teal);
+    background: rgba(224,240,235,0.6);
+  }
+
+  .pill-arabic {
+    font-family: 'Amiri', serif;
+    font-size: 1.05rem;
+    color: var(--teal);
+    line-height: 1;
+    transition: color 0.3s;
+  }
+  .book-pill.searching .pill-arabic { color: var(--gold); }
+
+  .pill-bangla {
+    font-family: 'Noto Serif Bengali', serif;
+    font-size: 0.72rem;
+    color: var(--ink);
+    opacity: 0.75;
+    text-align: center;
+    line-height: 1.3;
+  }
+
+  .pill-status {
+    font-size: 0.6rem;
+    height: 13px;
+    opacity: 0;
+    transition: opacity 0.3s;
+    font-style: italic;
+  }
+  .book-pill.searching .pill-status { opacity: 1; color: var(--gold-light); }
+  .book-pill.done .pill-status { opacity: 1; color: var(--teal); }
+
+  .pill-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--gold);
+    animation: pulse 0.8s ease-in-out infinite alternate;
+    display: none;
+  }
+  .book-pill.searching .pill-dot { display: block; }
+  .book-pill.done .pill-dot { display: block; background: var(--teal); animation: none; }
+
+  @keyframes pulse {
+    from { transform: scale(0.8); opacity: 0.6; }
+    to   { transform: scale(1.2); opacity: 1; }
+  }
+
+  .loader-generating {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.88rem;
+    color: var(--teal);
+    font-style: italic;
+    animation: fadeIn 0.4s ease;
+  }
+  .loader-generating.active { display: flex; }
+
+  .gen-ring {
+    width: 18px; height: 18px;
+    border: 2px solid var(--parchment-dark);
+    border-top-color: var(--teal);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    flex-shrink: 0;
+  }
+
+  /* ===== Answer section ===== */
+  .result-section { display: none; animation: fadeUp 0.5s ease both; }
+  .result-section.active { display: block; }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 36px 0 14px;
+  }
+
+  .section-header .s-line { flex: 1; height: 1px; background: rgba(184,134,11,0.3); }
+  .section-header h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--gold);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .answer-card {
+    background: linear-gradient(135deg, rgba(255,255,255,0.8), rgba(240,232,208,0.65));
+    border: 1px solid rgba(184,134,11,0.25);
+    border-left: 4px solid var(--teal);
+    border-radius: 3px;
+    padding: 28px 30px;
+    box-shadow: 0 4px 20px var(--shadow);
+    line-height: 1.9;
+    font-size: 1.02rem;
+    white-space: pre-wrap;
+  }
+
+  /* ===== Book results grid ===== */
+  .books-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 18px;
+    margin-top: 14px;
+  }
+
+  .book-card {
+    background: linear-gradient(160deg, rgba(255,255,255,0.75), rgba(224,240,235,0.5));
+    border: 1px solid rgba(45,106,90,0.2);
+    border-radius: 3px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px var(--shadow);
+    transition: transform 0.2s, box-shadow 0.2s;
+    animation: fadeUp 0.5s ease both;
+  }
+  .book-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px var(--shadow);
+  }
+
+  .book-header {
+    background: linear-gradient(135deg, var(--teal), var(--teal-light));
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .book-icon { font-size: 1.2rem; opacity: 0.9; }
+
+  .book-name {
+    font-family: 'Noto Serif Bengali', serif;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #fff;
+    line-height: 1.2;
+  }
+
+  .book-sub {
+    font-size: 0.68rem;
+    color: rgba(255,255,255,0.7);
+    font-style: italic;
+    margin-top: 1px;
+  }
+
+  .book-arabic-badge {
+    font-family: 'Amiri', serif;
+    font-size: 1.1rem;
+    color: rgba(255,255,255,0.85);
+    margin-left: auto;
+    padding-left: 8px;
+  }
+
+  .hadith-list { padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+
+  .hadith-item {
+    background: rgba(255,255,255,0.6);
+    border: 1px solid rgba(184,134,11,0.15);
+    border-left: 3px solid var(--gold-light);
+    border-radius: 2px;
+    padding: 10px 14px;
+    font-size: 0.86rem;
+    line-height: 1.7;
+    color: #2a1f08;
+    position: relative;
+    cursor: default;
+  }
+
+  .hadith-num {
+    display: inline-block;
+    background: var(--gold);
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: 700;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 18px;
+    margin-right: 6px;
+    flex-shrink: 0;
+    float: left;
+    margin-top: 2px;
+  }
+
+  /* ===== Error ===== */
+  .error-msg {
+    display: none;
+    background: rgba(139,58,26,0.08);
+    border: 1px solid rgba(139,58,26,0.3);
+    border-left: 4px solid var(--rust);
+    border-radius: 3px;
+    padding: 16px 20px;
+    color: var(--rust);
+    font-size: 0.9rem;
+    margin-top: 16px;
+    animation: fadeIn 0.3s ease;
+  }
+  .error-msg.active { display: block; }
+
+  /* ===== Keyframes ===== */
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; } to { opacity: 1; }
+  }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* Footer */
+  .footer-note {
+    text-align: center;
+    margin-top: 60px;
+    font-size: 0.78rem;
+    color: rgba(26,18,8,0.35);
+    font-style: italic;
+    font-family: 'Amiri', serif;
+  }
+
+  @media (max-width: 600px) {
+    .arabesque { font-size: 2rem; }
+    header h1 { font-size: 1.5rem; }
+    .input-row { flex-direction: column; }
+    .ask-btn { padding: 14px; display: flex; justify-content: center; gap: 8px; }
+    .books-grid { grid-template-columns: 1fr; }
+    .search-card { padding: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="arabesque">بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ</div>
+  <h1>হাদিস অনুসন্ধান</h1>
+  <p class="subtitle">আপনার ভাষায় হাদিস খুজুন</p>
+  <div class="divider">
+    <div class="divider-line"></div>
+    <div class="divider-gem"></div>
+    <div class="divider-line"></div>
+  </div>
+</header>
+
+<main>
+
+  <!-- Search card -->
+  <div class="search-card">
+    <label class="search-label" for="query">আপনার প্রশ্ন লিখুন</label>
+    <div class="input-row">
+      <textarea id="query" placeholder="যেমন: শাওয়াল মাসের রোজা"></textarea>
+      <button class="ask-btn" id="askBtn" onclick="askQuestion()">
+        <span class="btn-icon">🔍</span>
+        <span class="btn-text">জিজ্ঞাসা</span>
+      </button>
+    </div>
+    <div class="error-msg" id="errorMsg">⚠️ <span id="errorText"></span></div>
+  </div>
+
+  <!-- Loading -->
+  <div class="loader" id="loader">
+    <p class="loader-title">কিতাব অনুসন্ধান করা হচ্ছে…</p>
+    <div class="books-progress" id="booksProgress"></div>
+    <div class="loader-generating" id="loaderGenerating">
+      <div class="gen-ring"></div>
+      <span>উত্তর তৈরি করা হচ্ছে…</span>
+    </div>
+  </div>
+
+  <!-- Answer -->
+  <div class="result-section" id="answerSection">
+    <div class="section-header">
+      <div class="s-line"></div>
+      <h2>✦ উত্তর ✦</h2>
+      <div class="s-line"></div>
+    </div>
+    <div class="answer-card" id="answerCard"></div>
+  </div>
+
+  <!-- Book matches -->
+  <div class="result-section" id="booksSection">
+    <div class="section-header">
+      <div class="s-line"></div>
+      <h2>✦ সংশ্লিষ্ট হাদিস ✦</h2>
+      <div class="s-line"></div>
+    </div>
+    <div class="books-grid" id="booksGrid"></div>
+  </div>
+
+  <p class="footer-note">— হাদিস অনুসন্ধান ব্যবস্থা — শুধুমাত্র শিক্ষামূলক উদ্দেশ্যে —</p>
+</main>
+
+<script>
+  const BACKEND_URL = "https://multilobular-intensively-nicolle.ngrok-free.dev";
+
+  // ── Book metadata: key → { bangla, arabic, en } ──────────────────────────
+  const BOOK_MAP = {
+    bukhari:  { bangla: "বুখারী",       arabic: "البخاري",   en: "Sahih al-Bukhari" },
+    muslim:   { bangla: "মুসলিম",       arabic: "مسلم",      en: "Sahih Muslim" },
+    abudawud: { bangla: "আবু দাউদ",     arabic: "أبو داود",  en: "Sunan Abu Dawud" },
+    tirmidhi: { bangla: "তিরমিযী",      arabic: "الترمذي",   en: "Jami al-Tirmidhi" },
+    nasai:    { bangla: "নাসাঈ",        arabic: "النسائي",   en: "Sunan an-Nasa'i" },
+    ibnmajah: { bangla: "ইবনে মাজাহ",  arabic: "ابن ماجه",  en: "Sunan Ibn Majah" },
+    malik:    { bangla: "মালিক",        arabic: "مالك",      en: "Muwatta Imam Malik" },
+    nawawi:   { bangla: "নববী",         arabic: "النووي",    en: "Riyad as-Salihin" },
+  };
+
+  const BOOKS_ORDER = ["bukhari","muslim","abudawud","tirmidhi","nasai","ibnmajah","malik","nawawi"];
+
+  const queryEl        = document.getElementById("query");
+  const askBtn         = document.getElementById("askBtn");
+  const loader         = document.getElementById("loader");
+  const booksProgress  = document.getElementById("booksProgress");
+  const loaderGen      = document.getElementById("loaderGenerating");
+  const answerSec      = document.getElementById("answerSection");
+  const booksSec       = document.getElementById("booksSection");
+  const answerCard     = document.getElementById("answerCard");
+  const booksGrid      = document.getElementById("booksGrid");
+  const errorMsg       = document.getElementById("errorMsg");
+  const errorText      = document.getElementById("errorText");
+
+  queryEl.addEventListener("keydown", e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") askQuestion();
+  });
+
+  // ── Build the pill grid once ──────────────────────────────────────────────
+  function buildPills() {
+    booksProgress.innerHTML = "";
+    BOOKS_ORDER.forEach(key => {
+      const info = BOOK_MAP[key] || { bangla: key, arabic: "📖", en: key };
+      const pill = document.createElement("div");
+      pill.className = "book-pill";
+      pill.id = `pill-${key}`;
+      pill.innerHTML = `
+        <span class="pill-arabic">${info.arabic}</span>
+        <span class="pill-bangla">${info.bangla}</span>
+        <span class="pill-dot"></span>
+        <span class="pill-status" id="pill-status-${key}">অপেক্ষায়…</span>
+      `;
+      booksProgress.appendChild(pill);
+    });
+  }
+
+  function setPillState(key, state) {
+    // state: 'idle' | 'searching' | 'done'
+    const pill = document.getElementById(`pill-${key}`);
+    const status = document.getElementById(`pill-status-${key}`);
+    if (!pill) return;
+    pill.classList.remove("searching", "done");
+    if (state === "searching") {
+      pill.classList.add("searching");
+      status.textContent = "খোঁজা হচ্ছে…";
+    } else if (state === "done") {
+      pill.classList.add("done");
+      status.textContent = "✓ খোঁজা হয়েছে";
+    }
+  }
+
+  // Animate through books sequentially to mimic real search progress
+  // When the real API responds we show all as done; this gives visual feedback.
+  let animInterval = null;
+
+  function startBookAnimation() {
+    let idx = 0;
+    let prev = null;
+    animInterval = setInterval(() => {
+      if (prev !== null) setPillState(BOOKS_ORDER[prev], "searching"); // keep last as searching
+      if (idx < BOOKS_ORDER.length) {
+        if (prev !== null) setPillState(BOOKS_ORDER[prev], "done");
+        setPillState(BOOKS_ORDER[idx], "searching");
+        prev = idx;
+        idx++;
+      } else {
+        clearInterval(animInterval);
+        animInterval = null;
+        // show generating state
+        loaderGen.classList.add("active");
+      }
+    }, 600);
+  }
+
+  function finishBookAnimation() {
+    if (animInterval) { clearInterval(animInterval); animInterval = null; }
+    BOOKS_ORDER.forEach(k => setPillState(k, "done"));
+    loaderGen.classList.add("active");
+  }
+
+  function setLoading(on) {
+    loader.classList.toggle("active", on);
+    askBtn.disabled = on;
+    if (!on) {
+      loaderGen.classList.remove("active");
+      if (animInterval) { clearInterval(animInterval); animInterval = null; }
+    }
+  }
+
+  function showError(msg) { errorText.textContent = msg; errorMsg.classList.add("active"); }
+  function hideError()    { errorMsg.classList.remove("active"); }
+  function hideResults()  { answerSec.classList.remove("active"); booksSec.classList.remove("active"); }
+
+  async function askQuestion() {
+    const query = queryEl.value.trim();
+    if (!query) { showError("অনুগ্রহ করে একটি প্রশ্ন লিখুন।"); return; }
+
+    hideError();
+    hideResults();
+    buildPills();
+    loaderGen.classList.remove("active");
+    setLoading(true);
+    startBookAnimation();
+
+    try {
+      const resp = await fetch(`${BACKEND_URL}/ask`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query })
+      });
+
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({}));
+        throw new Error(err.error || `Server error ${resp.status}`);
+      }
+
+      finishBookAnimation();
+
+      const data = await resp.json();
+      renderAnswer(data.answer);
+      renderBooks(data.books);
+
+    } catch (err) {
+      showError(err.message || "সার্ভারের সাথে সংযোগ করা যায়নি।");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function renderAnswer(text) {
+    answerCard.textContent = text;
+    answerSec.classList.add("active");
+  }
+
+  function renderBooks(books) {
+    booksGrid.innerHTML = "";
+    const bookNames = Object.keys(books);
+    if (!bookNames.length) return;
+
+    bookNames.forEach((bookKey, bi) => {
+      const hadiths = books[bookKey].slice(0, 2);
+      if (!hadiths.length) return;
+
+      const info = BOOK_MAP[bookKey] || { bangla: bookKey, arabic: "📖", en: bookKey };
+
+      const card = document.createElement("div");
+      card.className = "book-card";
+      card.style.animationDelay = `${bi * 0.07}s`;
+
+      card.innerHTML = `
+        <div class="book-header">
+          <span class="book-icon">📖</span>
+          <div>
+            <div class="book-name">${escHtml(info.bangla)}</div>
+            <div class="book-sub">${escHtml(info.en)}</div>
+          </div>
+          <span class="book-arabic-badge">${info.arabic}</span>
+        </div>
+        <div class="hadith-list">
+          ${hadiths.map((h, i) => `
+            <div class="hadith-item">
+              <span class="hadith-num">${i + 1}</span>
+              ${escHtml(h)}
+            </div>
+          `).join("")}
+        </div>
+      `;
+
+      booksGrid.appendChild(card);
+    });
+
+    booksSec.classList.add("active");
+  }
+
+  function escHtml(s) {
+    return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  }
+</script>
+
+</body>
+</html>
