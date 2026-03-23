@@ -539,7 +539,7 @@
   </div>
 
   <!-- Answer -->
-  <div class="result-section" id="answerSection">
+  <!-- <div class="result-section" id="answerSection">
     <div class="section-header">
       <div class="s-line"></div>
       <h2>✦ উত্তর ✦</h2>
@@ -549,7 +549,7 @@
     <div class="warning-note">
       ⚠️ এই উত্তরটি একটি AI সিস্টেম দ্বারা তৈরি এবং ভুল হতে পারে। ধর্মীয় বিষয়ে সিদ্ধান্ত নেওয়ার আগে একজন যোগ্য আলেমের পরামর্শ নিন।
     </div>
-  </div>
+  </div> -->
 
   <!-- Book matches -->
   <div class="result-section" id="booksSection">
@@ -586,7 +586,7 @@
   const loader         = document.getElementById("loader");
   const booksProgress  = document.getElementById("booksProgress");
   const loaderGen      = document.getElementById("loaderGenerating");
-  const answerSec      = document.getElementById("answerSection");
+  // const answerSec      = document.getElementById("answerSection");
   const booksSec       = document.getElementById("booksSection");
   const answerCard     = document.getElementById("answerCard");
   const booksGrid      = document.getElementById("booksGrid");
@@ -670,7 +670,7 @@
 
   function showError(msg) { errorText.textContent = msg; errorMsg.classList.add("active"); }
   function hideError()    { errorMsg.classList.remove("active"); }
-  function hideResults()  { answerSec.classList.remove("active"); booksSec.classList.remove("active"); }
+  // function hideResults()  { answerSec.classList.remove("active"); booksSec.classList.remove("active"); }
 
   async function askQuestion() {
     const query = queryEl.value.trim();
@@ -698,7 +698,7 @@
       finishBookAnimation();
 
       const data = await resp.json();
-      renderAnswer(data.answer);
+      // renderAnswer(data.answer);
       renderBooks(data.books);
 
     } catch (err) {
