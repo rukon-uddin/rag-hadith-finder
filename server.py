@@ -126,19 +126,24 @@ Below is a dictionary of hadith.
 
 {similar}
 
-From the above dictionary, select the 2 hadith that are most relevant to the following question.
+A user has asked the following question:
 
 Question:
 {query}
 
 Instructions:
-1. The response must be entirely in Bangla.
-2. Write the hadith as it is in the dictionary witout the source, Dont repeat hadith.
-3. Do not include any explanation, introduction, or additional text.
-4. Do not use any special characters (such as **, ``, --- etc.).
-5. Follow the format below:
+1. Read the question carefully and check if the hadith in the dictionary can answer it.
+2. If the hadith can answer the question, write a single, direct answer in Bangla based strictly on the hadith content. Do not add any information beyond what the hadith states.
+3. If no hadith in the dictionary clearly answers the question, respond only with: "এই প্রশ্নের উত্তর প্রদত্ত হাদিসে পাওয়া যায়নি।"
+4. The response must be entirely in Bangla.
+5. After the answer, cite the hadith(s) you based your answer on using the format below.
+6. Do not include any explanation, introduction, or additional text beyond the answer and citation.
+7. Do not use any special characters (such as **, ``, --- etc.).
 
-Full hadith text - Book name(Hadith number from the source.)
+Format:
+Answer in Bangla.
+
+Source: Book name (Hadith number)
 """
 
 
@@ -161,8 +166,8 @@ async def ask(req: AskRequest):
     # Step 2 — LLM call (blocking network call → thread pool)
     # All 20 users' LLM calls run concurrently here because OpenAI/Groq
     # is an external service — no GPU contention on your machine.
-    # prompt = build_prompt(query, similar)
-    # answer = await loop.run_in_executor(_executor, _call_llm, prompt)
+    prompt = build_prompt(query, similar)
+    answer = await loop.run_in_executor(_executor, _call_llm, prompt)
 
     # top2 = {book: texts[:TOP_K_UI] for book, texts in similar.items()}
     top2 = {}
@@ -171,7 +176,7 @@ async def ask(req: AskRequest):
         if book == 'Top 3':
             top2[book] = texts[:4]
 
-    return AskResponse(answer='', books=top2)
+    return AskResponse(answer=answer, books=top2)
 
 
 @app.get("/health")
