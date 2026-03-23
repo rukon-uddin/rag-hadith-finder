@@ -147,27 +147,54 @@ Source: Book name (Hadith number)
 """
 
 
+def build_query_prompt(query):
+    return f"""
+আপনি একজন সহায়ক ইসলামিক অনুসন্ধান সহকারী।
+
+ব্যবহারকারী একটি প্রশ্ন বা বাক্য লিখেছে যা অগোছালো বা অসম্পূর্ণ হতে পারে। 
+আপনার কাজ হলো মূল প্রশ্নের অর্থ ঠিক রেখে আরও ৩টি ভিন্ন বাক্য তৈরি করা, 
+যাতে একই বিষয়ে হাদিস খোঁজা সহজ হয়।
+
+নিয়ম:
+১. সব বাক্য সম্পূর্ণ বাংলায় হবে।
+২. মূল প্রশ্নের অর্থ পরিবর্তন করা যাবে না।
+৩. প্রতিটি বাক্য আলাদা ভাবে লিখতে হবে।
+৪. অতিরিক্ত ব্যাখ্যা বা কোনো মন্তব্য লিখবেন না।
+৫. শুধু ৩টি নতুন বাক্য লিখবেন।
+
+ব্যবহারকারীর প্রশ্ন:
+{query}
+
+উত্তর:
+"""
+
+
 # ── Route ────────────────────────────────────────────────────────────────────────
 
 @app.post("/ask", response_model=AskResponse)
 async def ask(req: AskRequest):
     query = req.query.strip()
-    print("*"*100)
-    print(query)
-    print("*"*100)
+    query_prompt = build_query_prompt(query)
+    
     if not query:
         raise HTTPException(status_code=400, detail="query is required")
 
     loop = asyncio.get_event_loop()
 
+    generate_query = await loop.run_in_executor(_executor, _call_llm, query_prompt)
+    print("*"*100)
+    print(query)
+    print('-'*100)
+    print(generate_query)
+    print("*"*100)
     # Step 1 — embed + vector search (blocking GPU+CPU work → thread pool)
-    similar = await loop.run_in_executor(_executor, _embed_and_search, query)
+    similar = await loop.run_in_executor(_executor, _embed_and_search, generate_query)
 
     # Step 2 — LLM call (blocking network call → thread pool)
     # All 20 users' LLM calls run concurrently here because OpenAI/Groq
     # is an external service — no GPU contention on your machine.
-    prompt = build_prompt(query, similar)
-    answer = await loop.run_in_executor(_executor, _call_llm, prompt)
+    # prompt = build_prompt(query, similar)
+    # answer = await loop.run_in_executor(_executor, _call_llm, prompt)
 
     # top2 = {book: texts[:TOP_K_UI] for book, texts in similar.items()}
     top2 = {}
@@ -176,7 +203,7 @@ async def ask(req: AskRequest):
         if book == 'Top 3':
             top2[book] = texts[:4]
 
-    return AskResponse(answer=answer, books=top2)
+    return AskResponse(answer='', books=top2)
 
 
 @app.get("/health")
