@@ -67,9 +67,9 @@ app = FastAPI(title="Hadith RAG API", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=["https://rag-hadith-finder.vercel.app"],
+    allow_methods=["POST", "GET"],
+    allow_headers=["Content-Type", "Authorization"],
 )
 
 
@@ -222,7 +222,7 @@ async def health():
 if __name__ == "__main__":
     uvicorn.run(
         "server:app",
-        host="0.0.0.0",
+        # host="0.0.0.0",
         port=5123,
         workers=1,      # ← MUST stay 1: the GPU model pool lives in this process
         loop="asyncio",
